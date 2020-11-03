@@ -1,0 +1,120 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath 'org.openjfx:javafx-plugin:0.0.8'
+    }
+}
+
+/*
+ * Java version detection boilerplate.
+ *
+ * Starting with JDK9, JavaFX is decoupled from the JDK and can be used with the OpenJFX Gradle Plugin:
+ * https://openjfx.io/openjfx-docs/.
+ *
+ * The UI library used, TornadoFX, does not support Java 9, so that is out of the questions.
+ * When running on Java >= 10, download and apply the JFX Gradle plugin.
+ *
+ * Furthermore, use TornadoFX 2.0.0 (currently only available as snapshot release, but seems to be working mostly fine).
+ * TornadoFX 1.x is incompatible with JFX 9+. (https://github.com/edvin/tornadofx/issues/899)
+ */
+if (JavaVersion.current() == JavaVersion.VERSION_1_9) {
+    throw new GradleException("Java 9 is not supported!")
+}
+if (JavaVersion.current() < JavaVersion.VERSION_1_8) {
+    throw new GradleException("Java versions < 8 are not supported!")
+} else if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+    print("Java 8 detected. Using legacy inbuilt JavaFX.")
+}
+
+project.ext.useExternalJFX = JavaVersion.current() >= JavaVersion.VERSION_1_10
+
+if (project.useExternalJFX) {
+    apply plugin: "org.openjfx.javafxplugin"
+
+    javafx {
+        modules = ['javafx.controls']
+    }
+}
+
+group 'de.uulm.se'
+version '0.1'
+
+repositories {
+    flatDir {
+        dirs 'libs', 'libs/gef'
+    }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    // GUI Framework
+    if (project.useExternalJFX) {
+        implementation 'no.tornado:tornadofx:2.0.0-SNAPSHOT'
+    } else {
+        implementation 'no.tornado:tornadofx:1.7.18'
+    }
+
+    // GUI Framework
+    if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+        implementation 'no.tornado:tornadofx:1.7.18'
+    } else if (JavaVersion.current() == JavaVersion.VERSION_1_9) {
+        throw new GradleException("Java 1.9 is not supported!")
+    } else if (project.useExternalJFX) {
+        implementation 'no.tornado:tornadofx:2.0.0-SNAPSHOT'
+        // TODO: upgrade to a stable version once one becomes available
+    }
+
+
+    // Griffon-javafx for better bindings
+    implementation 'org.codehaus.griffon:griffon-javafx:2.15.0'
+
+    // nice icons
+    if (project.useExternalJFX) {
+        implementation 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
+        implementation 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+    } else {
+        implementation 'de.jensd:fontawesomefx-fontawesome:4.6.1-2'
+        implementation 'de.jensd:fontawesomefx-materialdesignfont:1.7.22'
+    }
+
+    implementation 'io.reactivex.rxjava2:rxjavafx:2.2.2'
+
+    // GEF for core UI. GEF is currently not available from Maven so we need to import the JAR manually
+    // Download from here https://download.eclipse.org/tools/gef/updates/releases/
+    implementation name: 'org.eclipse.gef.common_5.0.0.201903151300'
+    implementation name: 'org.eclipse.gef.fx_5.0.1.201903151300'
+    implementation name: 'org.eclipse.gef.geometry_5.0.0.201903151300'
+    implementation name: 'org.eclipse.gef.geometry.convert.fx_5.0.0.201903151300'
+    implementation name: 'org.eclipse.gef.mvc.fx_5.1.0.201903151300'
+    implementation 'org.eclipse.core:org.eclipse.core.commands:3.6.0'
+    implementation 'org.eclipse.core:org.eclipse.core.runtime:3.7.0'
+
+    implementation 'org.threadly:threadly:5.37'
+
+    implementation project(':core')
+    implementation project(':serialization')
+    implementation project(':export')
+
+    implementation project(':debugui')
+
+    implementation project(':statecharts')
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+task runUI(type: JavaExec) {
+    if (project.useExternalJFX) {
+        // Launching a JavaFX application directly does not seem to work anymore with JFX 10+, instead use the Main class
+        main = 'de.uulm.se.couchedit.client.MainKt'
+    } else {
+        main = 'de.uulm.se.couchedit.client.view.CouchApplication'
+    }
+    classpath = sourceSets.main.runtimeClasspath
+}

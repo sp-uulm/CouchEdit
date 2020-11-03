@@ -1,0 +1,83 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath 'org.openjfx:javafx-plugin:0.0.8'
+    }
+}
+
+/*
+ * Java version detection boilerplate.
+ *
+ * Starting with JDK9, JavaFX is decoupled from the JDK and can be used with the OpenJFX Gradle Plugin:
+ * https://openjfx.io/openjfx-docs/.
+ *
+ * The UI library used, TornadoFX, does not support Java 9, so that is out of the questions.
+ * When running on Java >= 10, download and apply the JFX Gradle plugin.
+ *
+ * Furthermore, use TornadoFX 2.0.0 (currently only available as snapshot release, but seems to be working fine).
+ * TornadoFX 1.x is incompatible with JFX 9+. (https://github.com/edvin/tornadofx/issues/899)
+ */
+if(JavaVersion.current() == JavaVersion.VERSION_1_9) {
+    throw new GradleException("Java 9 is not supported!")
+}
+if(JavaVersion.current() < JavaVersion.VERSION_1_8) {
+    throw new GradleException("Java versions < 8 are not supported!")
+}
+else if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+    print("Java 8 detected. Using legacy inbuilt JavaFX.")
+}
+
+project.ext.useExternalJFX = JavaVersion.current() >= JavaVersion.VERSION_1_10
+
+if (project.useExternalJFX) {
+    apply plugin: "org.openjfx.javafxplugin"
+
+    javafx {
+        modules = ['javafx.controls', 'javafx.swing']
+    }
+}
+
+group 'de.uulm.se'
+version '0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    // GUI Framework
+    if (project.useExternalJFX) {
+        implementation 'no.tornado:tornadofx:2.0.0-SNAPSHOT'
+    } else {
+        implementation 'no.tornado:tornadofx:1.7.18'
+    }
+
+    // nice icons
+    implementation 'de.jensd:fontawesomefx-fontawesome:4.6.1-2'
+
+    implementation 'com.github.vlsi.mxgraph:jgraphx:4.0.0'
+    implementation 'org.jgrapht:jgrapht-ext:1.3.1'
+
+    //JTS (Geometry lib) for backend
+    implementation 'org.locationtech.jts:jts-core:1.16.1'
+
+    implementation project(':core')
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}

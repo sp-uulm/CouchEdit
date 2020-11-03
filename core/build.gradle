@@ -1,0 +1,58 @@
+plugins {
+    id 'org.unbroken-dome.test-sets' version '2.1.1'
+}
+
+group 'de.uulm.se'
+version '0.1'
+
+
+testSets {
+    integrationTest
+}
+
+test {
+    useJUnitPlatform()
+}
+
+integrationTest {
+    useJUnitPlatform()
+}
+
+configurations {
+    integrationTestCompile.extendsFrom(testCompile)
+    integrationTestRuntime.extendsFrom(testRuntime)
+}
+
+dependencies {
+    // Data Structures for processing: JGraphT and Guava
+    implementation 'com.google.guava:guava:27.1-jre'
+    implementation 'org.jgrapht:jgrapht-core:1.3.0'
+
+    implementation 'org.threadly:threadly:5.37'
+
+    //JTS (Geometry lib) for backend
+    implementation 'org.locationtech.jts:jts-core:1.16.1'
+
+    // pre-made JTS algorithms
+    implementation project(':jts-extensions')
+
+    // pre-made JGraphT algorithms
+    implementation project(':jgrapht-extensions')
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.5.2"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.5.2"
+
+    testImplementation "com.rubylichtenstein:rxtest:1.0.7"
+    testImplementation 'io.mockk:mockk:1.9.3'
+    testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0'
+    testImplementation 'org.assertj:assertj-core:3.13.2'
+
+    integrationTestImplementation project(':test-suite-utilities')
+}
+
+compileIntegrationTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+integrationTest {
+    systemProperty('outDir', System.getProperty('outDir'))
+}

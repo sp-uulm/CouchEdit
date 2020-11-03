@@ -1,0 +1,11 @@
+rootProject.name = 'couchedit'
+include 'core'
+include 'frontend'
+include 'debugui'
+include 'jts-extensions'
+include 'statecharts'
+include 'jgrapht-extensions'
+include 'export'
+include 'serialization'
+include 'test-suite-utilities'
+
